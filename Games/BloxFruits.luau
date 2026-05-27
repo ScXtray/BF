@@ -137,274 +137,657 @@ local Connections = {}
 
 -- ============================================================
 -- QUEST DATABASE
--- Level = level minimum karakter
--- NpcPos = posisi NPC untuk accept & complete quest
--- NpcName = nama NPC (untuk CommF_)
--- Enemies = nama musuh yang harus dibunuh
--- Kill = jumlah kill yang dibutuhkan
+-- Level     = level minimum karakter
+-- NameQuest = internal quest ID untuk CommF_ StartQuest/TurnInQuest
+-- QuestSlot = nomor slot quest di NPC (1 atau 2)
+-- NpcPos    = posisi NPC untuk accept & complete quest
+-- MonPos    = posisi spawn musuh
+-- Enemies   = nama musuh yang harus dibunuh
+-- Kill      = jumlah kill yang dibutuhkan
 -- ============================================================
 
 local QuestData = {
-    -- ── Sea 1 ─────────────────────────────────────────────
+    -- ══════════════════════════════════════════════════════
+    -- Sea 1
+    -- ══════════════════════════════════════════════════════
     {
-        Level   = 10,  Name = "Monkeys",
-        NpcPos  = Vector3.new(-1598, 37, 153),
-        NpcName = "Jungle Quest Giver",
-        Enemies = { "Monkey" }, Kill = 6
+        Level = 1,   Name = "Bandits",
+        NameQuest = "BanditQuest1", QuestSlot = 1,
+        NpcPos = Vector3.new(1059, 15, 1550),
+        MonPos = Vector3.new(1046, 27, 1561),
+        Enemies = { "Bandit" }, Kill = 8
     },
     {
-        Level   = 15,  Name = "Gorillas",
-        NpcPos  = Vector3.new(-1598, 37, 153),
-        NpcName = "Jungle Quest Giver",
+        Level = 10,  Name = "Monkeys",
+        NameQuest = "JungleQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-1598, 36, 153),
+        MonPos = Vector3.new(-1449, 68, 11),
+        Enemies = { "Monkey" }, Kill = 8
+    },
+    {
+        Level = 15,  Name = "Gorillas",
+        NameQuest = "JungleQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-1598, 36, 153),
+        MonPos = Vector3.new(-1130, 40, -525),
         Enemies = { "Gorilla" }, Kill = 8
     },
     {
-        Level   = 30,  Name = "Pirates",
-        NpcPos  = Vector3.new(-1140, 4, 3829),
-        NpcName = "Buggy Quest Giver",
+        Level = 30,  Name = "Pirates",
+        NameQuest = "BuggyQuest1", QuestSlot = 1,
+        NpcPos = Vector3.new(-1141, 4, 3832),
+        MonPos = Vector3.new(-1104, 14, 3896),
         Enemies = { "Pirate" }, Kill = 8
     },
     {
-        Level   = 40,  Name = "Brutes",
-        NpcPos  = Vector3.new(-1140, 4, 3829),
-        NpcName = "Buggy Quest Giver",
+        Level = 40,  Name = "Brutes",
+        NameQuest = "BuggyQuest1", QuestSlot = 2,
+        NpcPos = Vector3.new(-1141, 4, 3832),
+        MonPos = Vector3.new(-1140, 15, 4323),
         Enemies = { "Brute" }, Kill = 8
     },
     {
-        Level   = 60,  Name = "Desert Bandits",
-        NpcPos  = Vector3.new(875, 7, -550),
-        NpcName = "Desert Quest Giver",
+        Level = 60,  Name = "Desert Bandits",
+        NameQuest = "DesertQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(894, 5, 4392),
+        MonPos = Vector3.new(925, 6, 4482),
         Enemies = { "Desert Bandit" }, Kill = 8
     },
     {
-        Level   = 75,  Name = "Desert Officers",
-        NpcPos  = Vector3.new(875, 7, -550),
-        NpcName = "Desert Quest Giver",
-        Enemies = { "Desert Officer" }, Kill = 6
+        Level = 75,  Name = "Desert Officers",
+        NameQuest = "DesertQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(894, 5, 4392),
+        MonPos = Vector3.new(1608, 9, 4371),
+        Enemies = { "Desert Officer" }, Kill = 8
     },
     {
-        Level   = 90,  Name = "Snow Bandits",
-        NpcPos  = Vector3.new(1385, 87, -1298),
-        NpcName = "Snow Quest Giver",
-        Enemies = { "Snow Bandit" }, Kill = 7
+        Level = 90,  Name = "Snow Bandits",
+        NameQuest = "SnowQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(1390, 88, -1299),
+        MonPos = Vector3.new(1354, 87, -1394),
+        Enemies = { "Snow Bandit" }, Kill = 8
     },
     {
-        Level   = 100, Name = "Snowmen",
-        NpcPos  = Vector3.new(1385, 87, -1298),
-        NpcName = "Snow Quest Giver",
+        Level = 100, Name = "Snowmen",
+        NameQuest = "SnowQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(1390, 88, -1299),
+        MonPos = Vector3.new(1202, 145, -1550),
         Enemies = { "Snowman" }, Kill = 8
     },
     {
-        Level   = 150, Name = "Sky Bandits",
-        NpcPos  = Vector3.new(-5145, 449, -1176),
-        NpcName = "Sky Quest Giver",
-        Enemies = { "Sky Bandit" }, Kill = 7
+        Level = 120, Name = "Chief Petty Officers",
+        NameQuest = "MarineQuest2", QuestSlot = 1,
+        NpcPos = Vector3.new(-5040, 27, 4325),
+        MonPos = Vector3.new(-4881, 23, 4274),
+        Enemies = { "Chief Petty Officer" }, Kill = 8
     },
     {
-        Level   = 175, Name = "Dark Masters",
-        NpcPos  = Vector3.new(-5145, 449, -1176),
-        NpcName = "Sky Quest Giver",
+        Level = 150, Name = "Sky Bandits",
+        NameQuest = "SkyQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-4840, 716, -2619),
+        MonPos = Vector3.new(-4953, 296, -2899),
+        Enemies = { "Sky Bandit" }, Kill = 8
+    },
+    {
+        Level = 175, Name = "Dark Masters",
+        NameQuest = "SkyQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-4840, 716, -2619),
+        MonPos = Vector3.new(-5260, 391, -2229),
         Enemies = { "Dark Master" }, Kill = 8
     },
     {
-        Level   = 220, Name = "Wardens",
-        NpcPos  = Vector3.new(5191, 4, 692),
-        NpcName = "Prison Quest Giver",
-        Enemies = { "Warden" }, Kill = 8
+        Level = 190, Name = "Prisoners",
+        NameQuest = "PrisonerQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(5309, 2, 475),
+        MonPos = Vector3.new(5099, 0, 474),
+        Enemies = { "Prisoner" }, Kill = 8
     },
     {
-        Level   = 230, Name = "Chief Wardens",
-        NpcPos  = Vector3.new(5191, 4, 692),
-        NpcName = "Prison Quest Giver",
-        Enemies = { "Chief Warden" }, Kill = 8
+        Level = 210, Name = "Dangerous Prisoners",
+        NameQuest = "PrisonerQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(5309, 2, 475),
+        MonPos = Vector3.new(5655, 16, 866),
+        Enemies = { "Dangerous Prisoner" }, Kill = 8
     },
     {
-        Level   = 300, Name = "Magma Ninjas",
-        NpcPos  = Vector3.new(-5319, 12, 8515),
-        NpcName = "Magma Quest Giver",
-        Enemies = { "Magma Ninja" }, Kill = 8
+        Level = 250, Name = "Toga Warriors",
+        NameQuest = "ColosseumQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-1580, 6, -2986),
+        MonPos = Vector3.new(-1820, 52, -2741),
+        Enemies = { "Toga Warrior" }, Kill = 8
     },
     {
-        Level   = 450, Name = "God's Guard",
-        NpcPos  = Vector3.new(-7861, 5545, -381),
-        NpcName = "Sky Exp Quest Giver",
-        Enemies = { "God's Guard" }, Kill = 7
+        Level = 275, Name = "Gladiators",
+        NameQuest = "ColosseumQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-1580, 6, -2986),
+        MonPos = Vector3.new(-1293, 56, -3339),
+        Enemies = { "Gladiator" }, Kill = 8
     },
     {
-        Level   = 475, Name = "Shanda",
-        NpcPos  = Vector3.new(-7861, 5545, -381),
-        NpcName = "Sky Exp Quest Giver",
-        Enemies = { "Shanda" }, Kill = 9
+        Level = 300, Name = "Military Soldiers",
+        NameQuest = "MagmaQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-5313, 11, 8515),
+        MonPos = Vector3.new(-5411, 11, 8454),
+        Enemies = { "Military Soldier" }, Kill = 8
     },
     {
-        Level   = 575, Name = "Thunder God",
-        NpcPos  = Vector3.new(-7903, 5636, -1412),
-        NpcName = "Upper Sky Quest Giver",
-        Enemies = { "Thunder God" }, Kill = 1
+        Level = 325, Name = "Military Spies",
+        NameQuest = "MagmaQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-5313, 11, 8515),
+        MonPos = Vector3.new(-5803, 86, 8829),
+        Enemies = { "Military Spy" }, Kill = 8
     },
     {
-        Level   = 625, Name = "Galley Pirates",
-        NpcPos  = Vector3.new(5258, 39, 4052),
-        NpcName = "Fountain Quest Giver",
+        Level = 375, Name = "Fishman Warriors",
+        NameQuest = "FishmanQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(61123, 18, 1569),
+        MonPos = Vector3.new(60878, 18, 1544),
+        Enemies = { "Fishman Warrior" }, Kill = 8
+    },
+    {
+        Level = 400, Name = "Fishman Commandos",
+        NameQuest = "FishmanQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(61123, 18, 1569),
+        MonPos = Vector3.new(61923, 18, 1494),
+        Enemies = { "Fishman Commando" }, Kill = 8
+    },
+    {
+        Level = 450, Name = "God's Guard",
+        NameQuest = "SkyExp1Quest", QuestSlot = 1,
+        NpcPos = Vector3.new(-4722, 844, -1950),
+        MonPos = Vector3.new(-4710, 845, -1927),
+        Enemies = { "God's Guard" }, Kill = 8
+    },
+    {
+        Level = 475, Name = "Shanda",
+        NameQuest = "SkyExp1Quest", QuestSlot = 2,
+        NpcPos = Vector3.new(-7859, 5544, -381),
+        MonPos = Vector3.new(-7678, 5566, -497),
+        Enemies = { "Shanda" }, Kill = 8
+    },
+    {
+        Level = 525, Name = "Royal Squads",
+        NameQuest = "SkyExp2Quest", QuestSlot = 1,
+        NpcPos = Vector3.new(-7907, 5635, -1412),
+        MonPos = Vector3.new(-7624, 5658, -1467),
+        Enemies = { "Royal Squad" }, Kill = 8
+    },
+    {
+        Level = 550, Name = "Royal Soldiers",
+        NameQuest = "SkyExp2Quest", QuestSlot = 2,
+        NpcPos = Vector3.new(-7907, 5635, -1412),
+        MonPos = Vector3.new(-7837, 5646, -1791),
+        Enemies = { "Royal Soldier" }, Kill = 8
+    },
+    {
+        Level = 625, Name = "Galley Pirates",
+        NameQuest = "FountainQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(5260, 37, 4050),
+        MonPos = Vector3.new(5551, 79, 3930),
         Enemies = { "Galley Pirate" }, Kill = 8
     },
     {
-        Level   = 650, Name = "Galley Captains",
-        NpcPos  = Vector3.new(5258, 39, 4052),
-        NpcName = "Fountain Quest Giver",
-        Enemies = { "Galley Captain" }, Kill = 9
+        Level = 650, Name = "Galley Captains",
+        NameQuest = "FountainQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(5260, 37, 4050),
+        MonPos = Vector3.new(5442, 43, 4950),
+        Enemies = { "Galley Captain" }, Kill = 8
     },
-    -- ── Sea 2 ─────────────────────────────────────────────
+    -- ══════════════════════════════════════════════════════
+    -- Sea 2
+    -- ══════════════════════════════════════════════════════
     {
-        Level   = 700, Name = "Raiders",
-        NpcPos  = Vector3.new(-427, 73, 1835),
-        NpcName = "Area 1 Quest Giver",
+        Level = 700, Name = "Raiders",
+        NameQuest = "Area1Quest", QuestSlot = 1,
+        NpcPos = Vector3.new(-430, 72, 1836),
+        MonPos = Vector3.new(-728, 53, 2346),
         Enemies = { "Raider" }, Kill = 8
     },
     {
-        Level   = 725, Name = "Mercenaries",
-        NpcPos  = Vector3.new(-427, 73, 1835),
-        NpcName = "Area 1 Quest Giver",
+        Level = 725, Name = "Mercenaries",
+        NameQuest = "Area1Quest", QuestSlot = 2,
+        NpcPos = Vector3.new(-430, 72, 1836),
+        MonPos = Vector3.new(-1004, 80, 1425),
         Enemies = { "Mercenary" }, Kill = 8
     },
     {
-        Level   = 775, Name = "Swan Pirates",
-        NpcPos  = Vector3.new(635, 73, 919),
-        NpcName = "Area 2 Quest Giver",
+        Level = 775, Name = "Swan Pirates",
+        NameQuest = "Area2Quest", QuestSlot = 1,
+        NpcPos = Vector3.new(638, 72, 918),
+        MonPos = Vector3.new(1069, 138, 1322),
         Enemies = { "Swan Pirate" }, Kill = 8
     },
     {
-        Level   = 800, Name = "Factory Staff",
-        NpcPos  = Vector3.new(635, 73, 919),
-        NpcName = "Area 2 Quest Giver",
+        Level = 800, Name = "Factory Staff",
+        NameQuest = "Area2Quest", QuestSlot = 2,
+        NpcPos = Vector3.new(638, 72, 918),
+        MonPos = Vector3.new(73, 82, -27),
         Enemies = { "Factory Staff" }, Kill = 8
     },
     {
-        Level   = 950, Name = "Zombies",
-        NpcPos  = Vector3.new(2680, 93, -1165),
-        NpcName = "Zombie Quest Giver",
+        Level = 875, Name = "Marine Lieutenants",
+        NameQuest = "MarineQuest3", QuestSlot = 1,
+        NpcPos = Vector3.new(-2441, 72, -3216),
+        MonPos = Vector3.new(-2821, 76, -3070),
+        Enemies = { "Marine Lieutenant" }, Kill = 8
+    },
+    {
+        Level = 900, Name = "Marine Captains",
+        NameQuest = "MarineQuest3", QuestSlot = 2,
+        NpcPos = Vector3.new(-2441, 72, -3216),
+        MonPos = Vector3.new(-1861, 80, -3255),
+        Enemies = { "Marine Captain" }, Kill = 8
+    },
+    {
+        Level = 950, Name = "Zombies",
+        NameQuest = "ZombieQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-5497, 48, -795),
+        MonPos = Vector3.new(-5658, 79, -929),
         Enemies = { "Zombie" }, Kill = 8
     },
     {
-        Level   = 975, Name = "Vampires",
-        NpcPos  = Vector3.new(2680, 93, -1165),
-        NpcName = "Zombie Quest Giver",
+        Level = 975, Name = "Vampires",
+        NameQuest = "ZombieQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-5497, 48, -795),
+        MonPos = Vector3.new(-6038, 32, -1341),
         Enemies = { "Vampire" }, Kill = 8
     },
     {
-        Level   = 1000, Name = "Snow Troopers",
-        NpcPos  = Vector3.new(-3061, 315, -9542),
-        NpcName = "Snow Mountain Quest Giver",
+        Level = 1000, Name = "Snow Troopers",
+        NameQuest = "SnowMountainQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(610, 400, -5372),
+        MonPos = Vector3.new(549, 427, -5564),
         Enemies = { "Snow Trooper" }, Kill = 8
     },
     {
-        Level   = 1050, Name = "Winter Warriors",
-        NpcPos  = Vector3.new(-3061, 315, -9542),
-        NpcName = "Snow Mountain Quest Giver",
-        Enemies = { "Winter Warrior" }, Kill = 9
+        Level = 1050, Name = "Winter Warriors",
+        NameQuest = "SnowMountainQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(610, 400, -5372),
+        MonPos = Vector3.new(1143, 476, -5199),
+        Enemies = { "Winter Warrior" }, Kill = 8
     },
     {
-        Level   = 1150, Name = "Magma Ninjas (S2)",
-        NpcPos  = Vector3.new(-6229, 82, -4853),
-        NpcName = "Ice Side Quest Giver",
+        Level = 1100, Name = "Lab Subordinates",
+        NameQuest = "IceSideQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-6064, 15, -4903),
+        MonPos = Vector3.new(-5707, 16, -4513),
+        Enemies = { "Lab Subordinate" }, Kill = 8
+    },
+    {
+        Level = 1125, Name = "Horned Warriors",
+        NameQuest = "IceSideQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-6064, 15, -4903),
+        MonPos = Vector3.new(-6341, 16, -5723),
+        Enemies = { "Horned Warrior" }, Kill = 8
+    },
+    {
+        Level = 1175, Name = "Magma Ninjas",
+        NameQuest = "FireSideQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-5428, 15, -5299),
+        MonPos = Vector3.new(-5450, 77, -5808),
         Enemies = { "Magma Ninja" }, Kill = 8
     },
     {
-        Level   = 1250, Name = "Ship Deckhands",
-        NpcPos  = Vector3.new(-7250, 9, -5773),
-        NpcName = "Ship Quest Giver",
+        Level = 1200, Name = "Lava Pirates",
+        NameQuest = "FireSideQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-5428, 15, -5299),
+        MonPos = Vector3.new(-5213, 50, -4701),
+        Enemies = { "Lava Pirate" }, Kill = 8
+    },
+    {
+        Level = 1250, Name = "Ship Deckhands",
+        NameQuest = "ShipQuest1", QuestSlot = 1,
+        NpcPos = Vector3.new(1038, 125, 32912),
+        MonPos = Vector3.new(1212, 151, 33059),
         Enemies = { "Ship Deckhand" }, Kill = 8
     },
     {
-        Level   = 1275, Name = "Ship Engineers",
-        NpcPos  = Vector3.new(-7250, 9, -5773),
-        NpcName = "Ship Quest Giver",
+        Level = 1275, Name = "Ship Engineers",
+        NameQuest = "ShipQuest1", QuestSlot = 2,
+        NpcPos = Vector3.new(1038, 125, 32912),
+        MonPos = Vector3.new(919, 44, 32780),
         Enemies = { "Ship Engineer" }, Kill = 8
     },
     {
-        Level   = 1350, Name = "Arctic Warriors",
-        NpcPos  = Vector3.new(5668, 28, -6484),
-        NpcName = "Frost Quest Giver",
+        Level = 1300, Name = "Ship Stewards",
+        NameQuest = "ShipQuest2", QuestSlot = 1,
+        NpcPos = Vector3.new(969, 125, 33244),
+        MonPos = Vector3.new(919, 130, 33436),
+        Enemies = { "Ship Steward" }, Kill = 8
+    },
+    {
+        Level = 1325, Name = "Ship Officers",
+        NameQuest = "ShipQuest2", QuestSlot = 2,
+        NpcPos = Vector3.new(969, 125, 33244),
+        MonPos = Vector3.new(1036, 181, 33316),
+        Enemies = { "Ship Officer" }, Kill = 8
+    },
+    {
+        Level = 1350, Name = "Arctic Warriors",
+        NameQuest = "FrostQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(5668, 27, -6486),
+        MonPos = Vector3.new(5966, 63, -6179),
         Enemies = { "Arctic Warrior" }, Kill = 8
     },
     {
-        Level   = 1375, Name = "Snow Lurkers",
-        NpcPos  = Vector3.new(5668, 28, -6484),
-        NpcName = "Frost Quest Giver",
+        Level = 1375, Name = "Snow Lurkers",
+        NameQuest = "FrostQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(5668, 27, -6486),
+        MonPos = Vector3.new(5407, 69, -6881),
         Enemies = { "Snow Lurker" }, Kill = 8
     },
     {
-        Level   = 1425, Name = "Sea Soldiers",
-        NpcPos  = Vector3.new(-3056, 240, -10145),
-        NpcName = "Forgotten Quest Giver",
+        Level = 1425, Name = "Sea Soldiers",
+        NameQuest = "ForgottenQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-3054, 236, -10143),
+        MonPos = Vector3.new(-3028, 65, -9775),
         Enemies = { "Sea Soldier" }, Kill = 8
     },
     {
-        Level   = 1450, Name = "Water Fighters",
-        NpcPos  = Vector3.new(-3056, 240, -10145),
-        NpcName = "Forgotten Quest Giver",
+        Level = 1450, Name = "Water Fighters",
+        NameQuest = "ForgottenQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-3054, 236, -10143),
+        MonPos = Vector3.new(-3291, 252, -10501),
         Enemies = { "Water Fighter" }, Kill = 8
     },
-    -- ── Sea 3 ─────────────────────────────────────────────
+    -- ══════════════════════════════════════════════════════
+    -- Sea 3
+    -- ══════════════════════════════════════════════════════
     {
-        Level   = 1500, Name = "Pirate Millionaires",
-        NpcPos  = Vector3.new(-449, 109, 5950),
-        NpcName = "Pirate Port Quest Giver",
+        Level = 1500, Name = "Pirate Millionaires",
+        NameQuest = "PiratePortQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-290, 43, 5582),
+        MonPos = Vector3.new(-246, 47, 5584),
         Enemies = { "Pirate Millionaire" }, Kill = 8
     },
     {
-        Level   = 1700, Name = "Marine Commodores",
-        NpcPos  = Vector3.new(2485, 74, -6788),
-        NpcName = "Marine Tree Quest Giver",
+        Level = 1525, Name = "Pistol Billionaires",
+        NameQuest = "PiratePortQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-290, 43, 5582),
+        MonPos = Vector3.new(-187, 86, 6014),
+        Enemies = { "Pistol Billionaire" }, Kill = 8
+    },
+    {
+        Level = 1575, Name = "Dragon Crew Warriors",
+        NameQuest = "DragonCrewQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(6739, 128, -714),
+        MonPos = Vector3.new(6921, 56, -943),
+        Enemies = { "Dragon Crew Warrior" }, Kill = 8
+    },
+    {
+        Level = 1600, Name = "Dragon Crew Archers",
+        NameQuest = "DragonCrewQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(6739, 128, -714),
+        MonPos = Vector3.new(6818, 485, 513),
+        Enemies = { "Dragon Crew Archer" }, Kill = 8
+    },
+    {
+        Level = 1625, Name = "Hydra Enforcers",
+        NameQuest = "VenomCrewQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(5214, 1005, 759),
+        MonPos = Vector3.new(4585, 1003, 706),
+        Enemies = { "Hydra Enforcer" }, Kill = 8
+    },
+    {
+        Level = 1650, Name = "Venomous Assailants",
+        NameQuest = "VenomCrewQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(5214, 1005, 759),
+        MonPos = Vector3.new(4639, 1079, 882),
+        Enemies = { "Venomous Assailant" }, Kill = 8
+    },
+    {
+        Level = 1700, Name = "Marine Commodores",
+        NameQuest = "MarineTreeIsland", QuestSlot = 1,
+        NpcPos = Vector3.new(2181, 28, -6742),
+        MonPos = Vector3.new(2286, 73, -7160),
         Enemies = { "Marine Commodore" }, Kill = 8
     },
     {
-        Level   = 1725, Name = "Marine Rear Admirals",
-        NpcPos  = Vector3.new(2485, 74, -6788),
-        NpcName = "Marine Tree Quest Giver",
+        Level = 1725, Name = "Marine Rear Admirals",
+        NameQuest = "MarineTreeIsland", QuestSlot = 2,
+        NpcPos = Vector3.new(2181, 28, -6742),
+        MonPos = Vector3.new(3657, 161, -7002),
         Enemies = { "Marine Rear Admiral" }, Kill = 8
     },
     {
-        Level   = 1775, Name = "Fishman Raiders",
-        NpcPos  = Vector3.new(-13233, 332, -7626),
-        NpcName = "Deep Forest Quest Giver",
+        Level = 1775, Name = "Fishman Raiders",
+        NameQuest = "DeepForestIsland3", QuestSlot = 1,
+        NpcPos = Vector3.new(-10582, 331, -8761),
+        MonPos = Vector3.new(-10408, 332, -8369),
         Enemies = { "Fishman Raider" }, Kill = 8
     },
     {
-        Level   = 1800, Name = "Fishman Captains",
-        NpcPos  = Vector3.new(-13233, 332, -7626),
-        NpcName = "Deep Forest Quest Giver",
+        Level = 1800, Name = "Fishman Captains",
+        NameQuest = "DeepForestIsland3", QuestSlot = 2,
+        NpcPos = Vector3.new(-10582, 331, -8761),
+        MonPos = Vector3.new(-10995, 352, -9002),
         Enemies = { "Fishman Captain" }, Kill = 8
     },
     {
-        Level   = 1900, Name = "Jungle Pirates",
-        NpcPos  = Vector3.new(-12682, 391, -9901),
-        NpcName = "Deep Forest 2 Quest Giver",
+        Level = 1825, Name = "Forest Pirates",
+        NameQuest = "DeepForestIsland", QuestSlot = 1,
+        NpcPos = Vector3.new(-13234, 331, -7625),
+        MonPos = Vector3.new(-13274, 332, -7770),
+        Enemies = { "Forest Pirate" }, Kill = 8
+    },
+    {
+        Level = 1850, Name = "Mythological Pirates",
+        NameQuest = "DeepForestIsland", QuestSlot = 2,
+        NpcPos = Vector3.new(-13234, 331, -7625),
+        MonPos = Vector3.new(-13681, 501, -6991),
+        Enemies = { "Mythological Pirate" }, Kill = 8
+    },
+    {
+        Level = 1900, Name = "Jungle Pirates",
+        NameQuest = "DeepForestIsland2", QuestSlot = 1,
+        NpcPos = Vector3.new(-12680, 390, -9902),
+        MonPos = Vector3.new(-12256, 332, -10486),
         Enemies = { "Jungle Pirate" }, Kill = 8
     },
     {
-        Level   = 1925, Name = "Musketeer Pirates",
-        NpcPos  = Vector3.new(-12682, 391, -9901),
-        NpcName = "Deep Forest 2 Quest Giver",
+        Level = 1925, Name = "Musketeer Pirates",
+        NameQuest = "DeepForestIsland2", QuestSlot = 2,
+        NpcPos = Vector3.new(-12680, 390, -9902),
+        MonPos = Vector3.new(-13458, 392, -9859),
         Enemies = { "Musketeer Pirate" }, Kill = 8
     },
     {
-        Level   = 1975, Name = "Reborn Skeletons",
-        NpcPos  = Vector3.new(-1680, 121, -11610),
-        NpcName = "Haunted Quest Giver",
+        Level = 1975, Name = "Reborn Skeletons",
+        NameQuest = "HauntedQuest1", QuestSlot = 1,
+        NpcPos = Vector3.new(-9479, 141, 5566),
+        MonPos = Vector3.new(-8764, 166, 6160),
         Enemies = { "Reborn Skeleton" }, Kill = 8
     },
     {
-        Level   = 2000, Name = "Living Zombies",
-        NpcPos  = Vector3.new(-1680, 121, -11610),
-        NpcName = "Haunted Quest Giver",
+        Level = 2000, Name = "Living Zombies",
+        NameQuest = "HauntedQuest1", QuestSlot = 2,
+        NpcPos = Vector3.new(-9479, 141, 5566),
+        MonPos = Vector3.new(-10144, 139, 5838),
         Enemies = { "Living Zombie" }, Kill = 8
     },
     {
-        Level   = 2400, Name = "Candy Pirates",
-        NpcPos  = Vector3.new(-13665, 199, -11000),
-        NpcName = "Candy Quest Giver",
+        Level = 2025, Name = "Demonic Souls",
+        NameQuest = "HauntedQuest2", QuestSlot = 1,
+        NpcPos = Vector3.new(-9517, 172, 6078),
+        MonPos = Vector3.new(-9506, 172, 6159),
+        Enemies = { "Demonic Soul" }, Kill = 8
+    },
+    {
+        Level = 2050, Name = "Possessed Mummies",
+        NameQuest = "HauntedQuest2", QuestSlot = 2,
+        NpcPos = Vector3.new(-9517, 172, 6078),
+        MonPos = Vector3.new(-9582, 6, 6205),
+        Enemies = { "Posessed Mummy" }, Kill = 8
+    },
+    {
+        Level = 2075, Name = "Peanut Scouts",
+        NameQuest = "NutsIslandQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-2104, 38, -10194),
+        MonPos = Vector3.new(-2143, 48, -10030),
+        Enemies = { "Peanut Scout" }, Kill = 8
+    },
+    {
+        Level = 2100, Name = "Peanut Presidents",
+        NameQuest = "NutsIslandQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-2104, 38, -10194),
+        MonPos = Vector3.new(-1859, 38, -10422),
+        Enemies = { "Peanut President" }, Kill = 8
+    },
+    {
+        Level = 2125, Name = "Ice Cream Chefs",
+        NameQuest = "IceCreamIslandQuest", QuestSlot = 1,
+        NpcPos = Vector3.new(-821, 66, -10966),
+        MonPos = Vector3.new(-872, 66, -10920),
+        Enemies = { "Ice Cream Chef" }, Kill = 8
+    },
+    {
+        Level = 2150, Name = "Ice Cream Commanders",
+        NameQuest = "IceCreamIslandQuest", QuestSlot = 2,
+        NpcPos = Vector3.new(-821, 66, -10966),
+        MonPos = Vector3.new(-558, 112, -11291),
+        Enemies = { "Ice Cream Commander" }, Kill = 8
+    },
+    {
+        Level = 2200, Name = "Cookie Crafters",
+        NameQuest = "CakeQuest1", QuestSlot = 1,
+        NpcPos = Vector3.new(-2021, 38, -12029),
+        MonPos = Vector3.new(-2374, 38, -12125),
+        Enemies = { "Cookie Crafter" }, Kill = 8
+    },
+    {
+        Level = 2225, Name = "Cake Guards",
+        NameQuest = "CakeQuest1", QuestSlot = 2,
+        NpcPos = Vector3.new(-2021, 38, -12029),
+        MonPos = Vector3.new(-1598, 44, -12245),
+        Enemies = { "Cake Guard" }, Kill = 8
+    },
+    {
+        Level = 2250, Name = "Baking Staff",
+        NameQuest = "CakeQuest2", QuestSlot = 1,
+        NpcPos = Vector3.new(-1928, 38, -12843),
+        MonPos = Vector3.new(-1888, 78, -12998),
+        Enemies = { "Baking Staff" }, Kill = 8
+    },
+    {
+        Level = 2275, Name = "Head Bakers",
+        NameQuest = "CakeQuest2", QuestSlot = 2,
+        NpcPos = Vector3.new(-1928, 38, -12843),
+        MonPos = Vector3.new(-2216, 83, -12869),
+        Enemies = { "Head Baker" }, Kill = 8
+    },
+    {
+        Level = 2300, Name = "Cocoa Warriors",
+        NameQuest = "ChocQuest1", QuestSlot = 1,
+        NpcPos = Vector3.new(233, 30, -12201),
+        MonPos = Vector3.new(-22, 81, -12352),
+        Enemies = { "Cocoa Warrior" }, Kill = 8
+    },
+    {
+        Level = 2325, Name = "Chocolate Bar Battlers",
+        NameQuest = "ChocQuest1", QuestSlot = 2,
+        NpcPos = Vector3.new(233, 30, -12201),
+        MonPos = Vector3.new(583, 77, -12463),
+        Enemies = { "Chocolate Bar Battler" }, Kill = 8
+    },
+    {
+        Level = 2350, Name = "Sweet Thieves",
+        NameQuest = "ChocQuest2", QuestSlot = 1,
+        NpcPos = Vector3.new(151, 31, -12775),
+        MonPos = Vector3.new(165, 76, -12601),
+        Enemies = { "Sweet Thief" }, Kill = 8
+    },
+    {
+        Level = 2375, Name = "Candy Rebels",
+        NameQuest = "ChocQuest2", QuestSlot = 2,
+        NpcPos = Vector3.new(151, 31, -12775),
+        MonPos = Vector3.new(135, 77, -12877),
+        Enemies = { "Candy Rebel" }, Kill = 8
+    },
+    {
+        Level = 2400, Name = "Candy Pirates",
+        NameQuest = "CandyQuest1", QuestSlot = 1,
+        NpcPos = Vector3.new(-1150, 20, -14446),
+        MonPos = Vector3.new(-1311, 26, -14562),
         Enemies = { "Candy Pirate" }, Kill = 8
+    },
+    {
+        Level = 2425, Name = "Snow Demons",
+        NameQuest = "CandyQuest1", QuestSlot = 2,
+        NpcPos = Vector3.new(-1150, 20, -14446),
+        MonPos = Vector3.new(-880, 71, -14539),
+        Enemies = { "Snow Demon" }, Kill = 8
+    },
+    {
+        Level = 2450, Name = "Isle Outlaws",
+        NameQuest = "TikiQuest1", QuestSlot = 1,
+        NpcPos = Vector3.new(-16548, 61, -173),
+        MonPos = Vector3.new(-16443, 116, -264),
+        Enemies = { "Isle Outlaw" }, Kill = 8
+    },
+    {
+        Level = 2475, Name = "Island Boys",
+        NameQuest = "TikiQuest1", QuestSlot = 2,
+        NpcPos = Vector3.new(-16548, 61, -173),
+        MonPos = Vector3.new(-16901, 84, -193),
+        Enemies = { "Island Boy" }, Kill = 8
+    },
+    {
+        Level = 2525, Name = "Isle Champions",
+        NameQuest = "TikiQuest2", QuestSlot = 2,
+        NpcPos = Vector3.new(-16539, 56, 1052),
+        MonPos = Vector3.new(-16642, 236, 1031),
+        Enemies = { "Isle Champion" }, Kill = 8
+    },
+    {
+        Level = 2550, Name = "Serpent Hunters",
+        NameQuest = "TikiQuest3", QuestSlot = 1,
+        NpcPos = Vector3.new(-16665, 105, 1580),
+        MonPos = Vector3.new(-16521, 106, 1489),
+        Enemies = { "Serpent Hunter" }, Kill = 8
+    },
+    {
+        Level = 2575, Name = "Skull Slayers",
+        NameQuest = "TikiQuest3", QuestSlot = 2,
+        NpcPos = Vector3.new(-16665, 105, 1580),
+        MonPos = Vector3.new(-16855, 122, 1478),
+        Enemies = { "Skull Slayer" }, Kill = 8
+    },
+    -- ══════════════════════════════════════════════════════
+    -- Sea 4 (Submerged)
+    -- ══════════════════════════════════════════════════════
+    {
+        Level = 2600, Name = "Reef Bandits",
+        NameQuest = "SubmergedQuest1", QuestSlot = 1,
+        NpcPos = Vector3.new(10780, -2088, 9262),
+        MonPos = Vector3.new(10943, -2083, 9177),
+        Enemies = { "Reef Bandit" }, Kill = 8
+    },
+    {
+        Level = 2625, Name = "Coral Pirates",
+        NameQuest = "SubmergedQuest1", QuestSlot = 2,
+        NpcPos = Vector3.new(10780, -2088, 9262),
+        MonPos = Vector3.new(10713, -2093, 9307),
+        Enemies = { "Coral Pirate" }, Kill = 8
+    },
+    {
+        Level = 2650, Name = "Sea Chanters",
+        NameQuest = "SubmergedQuest2", QuestSlot = 1,
+        NpcPos = Vector3.new(10884, -2086, 10032),
+        MonPos = Vector3.new(10648, -2078, 10080),
+        Enemies = { "Sea Chanter" }, Kill = 8
+    },
+    {
+        Level = 2675, Name = "High Disciples",
+        NameQuest = "SubmergedQuest3", QuestSlot = 1,
+        NpcPos = Vector3.new(9636, -1992, 9614),
+        MonPos = Vector3.new(9844, -1993, 9696),
+        Enemies = { "High Disciple" }, Kill = 8
+    },
+    {
+        Level = 2700, Name = "Grand Devotees",
+        NameQuest = "SubmergedQuest3", QuestSlot = 2,
+        NpcPos = Vector3.new(9636, -1992, 9614),
+        MonPos = Vector3.new(9591, -1993, 9808),
+        Enemies = { "Grand Devotee" }, Kill = 8
     },
 }
 
@@ -875,7 +1258,7 @@ local function TryAcceptQuest(quest)
         -- Coba accept quest dengan nama NPC dan slot (1 atau 2)
         -- StartQuest adalah remote yang benar di BloxFruits
         local slot = quest.QuestSlot or 1
-        CommF:InvokeServer("StartQuest", quest.NpcName, slot)
+        CommF:InvokeServer("StartQuest", quest.NameQuest, slot)
     end)
     task.wait(0.5)
 end
@@ -884,7 +1267,7 @@ local function TryCompleteQuest(quest)
     if not CommF then return end
     pcall(function()
         -- TurnInQuest / EndQuest tergantung versi BF
-        CommF:InvokeServer("TurnInQuest", quest.NpcName)
+        CommF:InvokeServer("TurnInQuest", quest.NameQuest)
     end)
     task.wait(0.5)
 end
@@ -1511,7 +1894,7 @@ FarmTab:AddToggle({
                 )
 
                 -- ── STEP 1: Tween Fly ke NPC, accept quest ────────
-                FarmLvParagraph:Set("Status", "Terbang ke NPC: " .. quest.NpcName)
+                FarmLvParagraph:Set("Status", "Terbang ke NPC: " .. quest.Name)
                 pcall(TweenFlyTo, quest.NpcPos)
                 task.wait(1)
                 pcall(TryAcceptQuest, quest)
@@ -2239,7 +2622,7 @@ QuestTab:AddToggle({
                     else
 
                     -- ── STEP 1: Teleport ke NPC dan accept quest ──────────
-                    QuestStatusParagraph:Set("Status", "Teleport ke NPC: " .. quest.NpcName)
+                    QuestStatusParagraph:Set("Status", "Teleport ke NPC: " .. quest.Name)
                     TeleportTo(quest.NpcPos)
                     task.wait(1.5)
 
