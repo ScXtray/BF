@@ -27,7 +27,6 @@ local FullBright  = safeLoad("{Repository}Utils/Module/FullBright.luau")
 local AntiReset   = safeLoad("{Repository}Utils/Module/AntiReset.luau")
 local ESP         = safeLoad("{Repository}Utils/Module/BloxFruitsESP.luau")
 local FastAttack  = safeLoad("{Repository}Utils/Module/FastAttack.luau")
-local TweenModule = safeLoad("https://raw.githubusercontent.com/newredzv3/Scripts/refs/heads/main/Utils/Module/Tween-Module.luau")
 
 -- Pastikan semua modul punya fungsi fallback jika gagal load
 if not Movement.Toggle    then Movement    = { Toggle = function() end, SetSpeed = function() end, SetJump = function() end } end
@@ -35,20 +34,6 @@ if not FullBright.Toggle  then FullBright  = { Toggle = function() end } end
 if not AntiReset.SetEnabled then AntiReset = { SetEnabled = function() end } end
 if not ESP.Toggle         then ESP         = { Toggle = function() end, Start = function() end } end
 if not FastAttack.Toggle  then FastAttack  = { Toggle = function() end, SetRange = function() end, SetAttackMobs = function() end, SetAttackPlayers = function() end } end
--- Fallback TweenModule: gunakan teleport instan jika modul gagal load
-if not TweenModule.Teleport then
-    TweenModule = {
-        _active = false,
-        Teleport = function(self, cf)
-            local root = GetRootPart()
-            if root then root.CFrame = cf end
-            return true
-        end,
-        Stop        = function(self) self._active = false end,
-        SetSpeed    = function(self, s) end,
-        IsTweening  = function(self) return false end,
-    }
-end
 
 -- ============================================================
 -- NOTIFIKASI HELPER (Library tidak punya Notify)
@@ -73,6 +58,7 @@ local RunService        = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService  = game:GetService("UserInputService")
 local Lighting          = game:GetService("Lighting")
+local TweenService      = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
 local Enemies     = workspace:WaitForChild("Enemies", 10)
@@ -105,6 +91,8 @@ local State = {
     BringRadius       = 200,
     StartBring        = false,
     FreezeBring       = false,
+    MaxBringMobs      = 3,
+    BringTweenSpeed   = 0.45,
     AttackMobs        = true,
     AttackPlayers     = false,
     WalkInWater       = false,
@@ -451,26 +439,45 @@ local function TeleportTo(position)
     end
 end
 
--- Terbang smooth ke target menggunakan TweenModule
--- (NoClip + BodyVelocity otomatis, lebih stabil dari tween manual)
+-- ============================================================
+-- TWEEN FLY (native TweenService — tidak bergantung URL eksternal)
+-- Teknik dari redzplock: CurrentTween tracker + StopTween + guard farm aktif
+-- ============================================================
+
+local CurrentFlyTween = nil
+
+local function StopFlyTween()
+    if CurrentFlyTween then
+        pcall(function() CurrentFlyTween:Cancel() end)
+        CurrentFlyTween = nil
+    end
+end
+
 local function TweenFlyTo(targetPos, speed)
     if not targetPos then return end
+    local root = GetRootPart()
+    if not root then return end
 
-    -- Sync speed jika diberikan secara eksplisit
-    if speed then
-        TweenModule:SetSpeed(speed)
-    else
-        TweenModule:SetSpeed(State.TweeningSpeed or 300)
+    StopFlyTween()
+
+    local spd  = speed or State.TweeningSpeed or 300
+    local dist = (root.Position - targetPos).Magnitude
+    local t    = math.max(dist / spd, 0.05)
+
+    CurrentFlyTween = TweenService:Create(
+        root,
+        TweenInfo.new(t, Enum.EasingStyle.Linear),
+        { CFrame = CFrame.new(targetPos) }
+    )
+    CurrentFlyTween:Play()
+
+    -- Blocking: tunggu sampai selesai, bisa di-cancel kapanpun lewat StopFlyTween
+    while CurrentFlyTween
+        and CurrentFlyTween.PlaybackState == Enum.PlaybackState.Playing do
+        task.wait()
     end
 
-    -- Mulai tween fly (non-blocking internal, kita poll sampai selesai)
-    TweenModule:Teleport(CFrame.new(targetPos))
-
-    -- Tunggu sampai tween selesai atau timeout 30 detik
-    local timeout = tick() + 30
-    repeat
-        task.wait(0.05)
-    until not TweenModule:IsTweening() or tick() > timeout
+    StopFlyTween()
 end
 
 local function GetNearestEnemy(range, nameFilter)
@@ -538,8 +545,48 @@ local function AttackWithWeapon()
     if tool then pcall(function() tool:Activate() end) end
 end
 
--- Tarik semua musuh dalam radius ke posisi player
--- (teknik dari Panda-Hub: size 60 + PlatformStand + Sit + CanCollide false + SimulationRadius)
+-- ============================================================
+-- BRING ENEMY SYSTEM
+-- Teknik gabungan terbaik dari semua source:
+--   • TweenService 0.45s smooth            (LongHiHi / Thauan Hub)
+--   • MaxBringMobs limit                   (Eclipse Hub / LongHiHi)
+--   • IsRaidMob filter 4 kondisi           (LongHiHi — paling lengkap)
+--   • PosMon — posisi mob target dikunci   (Eclipse / Gay Hub / Thauan)
+--   • Tweening attribute anti double-bring (Eclipse / LongHiHi)
+--   • Animator:Destroy + WalkSpeed=0       (Gay Hub)
+--   • SimulationRadius boost               (Panda-Hub)
+-- ============================================================
+
+local PosMon = nil  -- posisi mob yang sedang dikunci (diset dari farm loop)
+
+local BringTweenInfo = TweenInfo.new(
+    0.45,
+    Enum.EasingStyle.Linear,
+    Enum.EasingDirection.Out
+)
+
+local function IsRaidMob(mob)
+    local n = mob.Name:lower()
+    -- Cek nama (LongHiHi)
+    if n:find("raid") or n:find("microchip") or n:find("island") then
+        return true
+    end
+    -- Cek attribute (Eclipse / LongHiHi)
+    if mob:GetAttribute("IsRaid")
+        or mob:GetAttribute("RaidMob")
+        or mob:GetAttribute("IsBoss") then
+        return true
+    end
+    -- Cek WalkSpeed == 0 → mob sudah beku / boss (LongHiHi)
+    local hum = mob:FindFirstChild("Humanoid")
+    if hum and hum.WalkSpeed == 0 then return true end
+    -- Cek parent WorldOrigin (LongHiHi eksklusif)
+    if mob.Parent and tostring(mob.Parent):lower():find("_worldorigin") then
+        return true
+    end
+    return false
+end
+
 local FreezeBringConns = {}
 local function BringEnemiesToPlayer()
     local root = GetRootPart()
@@ -550,23 +597,57 @@ local function BringEnemiesToPlayer()
     -- Perluas SimulationRadius agar kita punya network ownership musuh
     pcall(sethiddenproperty, LocalPlayer, "SimulationRadius", math.huge)
 
-    local targetCF = root.CFrame
-    for _, enemy in ipairs(EFolder:GetChildren()) do
-        local hrp = enemy:FindFirstChild("HumanoidRootPart")
-        local hum = enemy:FindFirstChildOfClass("Humanoid")
-        if hrp and hum and hum.Health > 0 then
-            local dist = (hrp.Position - root.Position).Magnitude
-            if dist <= State.BringRadius then
+    -- Target posisi: PosMon (mob dikunci) atau posisi player
+    local rawPos    = PosMon or root.CFrame
+    local targetPos = typeof(rawPos) == "CFrame" and rawPos.Position or rawPos
+
+    local count    = 0
+    local maxMobs  = State.MaxBringMobs or 3
+
+    for _, mob in ipairs(EFolder:GetChildren()) do
+        if count >= maxMobs then break end
+
+        local hum     = mob:FindFirstChild("Humanoid")
+        local mobRoot = mob:FindFirstChild("HumanoidRootPart")
+
+        if hum and mobRoot and hum.Health > 0 and not IsRaidMob(mob) then
+            local dist = (mobRoot.Position - targetPos).Magnitude
+
+            if dist <= State.BringRadius
+                and not mobRoot:GetAttribute("Tweening") then
+
+                count += 1
+                mobRoot:SetAttribute("Tweening", true)
+
+                -- Freeze mob agar tidak kabur (Gay Hub)
                 pcall(function()
-                    -- Perbesar hitbox agar mudah kena serangan
-                    hrp.Size        = Vector3.new(60, 60, 60)
-                    hrp.CFrame      = targetCF * CFrame.new(
-                        math.random(-3, 3), 0, math.random(-3, 3)
-                    )
-                    hrp.CanCollide  = false
-                    -- Paksa musuh tidak bergerak/menolak
+                    hum.WalkSpeed     = 0
+                    hum.JumpPower     = 0
                     hum.PlatformStand = true
-                    hum.Sit           = true
+                    if hum:FindFirstChild("Animator") then
+                        hum.Animator:Destroy()
+                    end
+                end)
+
+                -- Smooth bring via TweenService (LongHiHi / Thauan Hub)
+                local offset = Vector3.new(
+                    math.random(-3, 3), 0, math.random(-3, 3)
+                )
+                local tween = TweenService:Create(
+                    mobRoot,
+                    BringTweenInfo,
+                    { CFrame = CFrame.new(targetPos + offset) }
+                )
+                tween:Play()
+                tween.Completed:Once(function()
+                    if mobRoot then
+                        mobRoot:SetAttribute("Tweening", false)
+                        -- Perbesar hitbox setelah tiba agar mudah kena serangan
+                        pcall(function()
+                            mobRoot.Size       = Vector3.new(60, 60, 60)
+                            mobRoot.CanCollide = false
+                        end)
+                    end
                 end)
             end
         end
@@ -987,6 +1068,8 @@ FarmTab:AddToggle({
                             local hrp = enemy:FindFirstChild("HumanoidRootPart")
                             local hum = enemy:FindFirstChildOfClass("Humanoid")
                             if hrp and hum and hum.Health > 0 then
+                                -- Kunci posisi mob untuk sistem PosMon bring
+                                PosMon = hrp.CFrame
                                 -- Tween smooth ke musuh (tidak teleport abrupt)
                                 local dist = (hrp.Position - root.Position).Magnitude
                                 if dist > 8 then
@@ -995,6 +1078,8 @@ FarmTab:AddToggle({
                                 end
                                 AttackWithWeapon()
                             end
+                        else
+                            PosMon = nil
                         end
                     end
 
@@ -1302,7 +1387,7 @@ FarmTab:AddSlider({
     600,
     1,
     300,
-    function(v) State.TweeningSpeed = v; TweenModule:SetSpeed(v) end,
+    function(v) State.TweeningSpeed = v end,
     "TweeningSpeed"
 })
 
@@ -1384,7 +1469,7 @@ FarmTab:AddSlider({
     800,
     1,
     300,
-    function(v) State.TweeningSpeed = v; TweenModule:SetSpeed(v) end,
+    function(v) State.TweeningSpeed = v end,
     "FarmLvTweenSpeed"
 })
 
@@ -1457,7 +1542,9 @@ FarmTab:AddToggle({
                                 ("Terbang ke %s [%d/%d]"):format(quest.Enemies[1], killCount, killTarget)
                             )
 
-                            -- Terbang smooth ke musuh dengan TweenModule
+                            -- Kunci posisi mob target untuk sistem PosMon bring
+                            PosMon = hrp.CFrame
+                            -- Terbang smooth ke musuh dengan TweenService
                             pcall(TweenFlyTo, hrp.Position)
                             task.wait(0.1)
 
@@ -2188,6 +2275,8 @@ QuestTab:AddToggle({
                             local hum = enemy:FindFirstChildOfClass("Humanoid")
 
                             if hrp and hum and hum.Health > 0 then
+                                -- Kunci posisi mob target untuk sistem PosMon bring
+                                PosMon = hrp.CFrame
                                 -- Tween fly ke musuh (smooth, tidak abrupt)
                                 pcall(TweenFlyTo, hrp.Position)
                                 task.wait(0.1)
