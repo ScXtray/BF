@@ -5,6 +5,77 @@ Format: `[Tanggal] versi — deskripsi`
 
 ---
 
+## [2026-05-27] v2.2.0 — Full QuestData Overhaul (90 Entry, Fix NpcName→NameQuest)
+
+### Games/BloxFruits.luau — QuestData & Quest Logic
+
+#### Bug Kritis Diperbaiki
+- **`StartQuest` salah parameter**: Ganti `quest.NpcName` ("Jungle Quest Giver") → `quest.NameQuest` ("JungleQuest") di `TryAcceptQuest` — sebelumnya SEMUA accept quest pasti gagal karena server BF butuh internal quest ID, bukan display name NPC
+- **`TurnInQuest` salah parameter**: Sama — ganti `quest.NpcName` → `quest.NameQuest` di `TryCompleteQuest`
+- **`QuestSlot` kini eksplisit di semua entry** — sebelumnya semua default slot 1, quest slot 2 tidak pernah di-accept dengan benar
+
+#### QuestData — Rewrite Total (26 entry lama → 90 entry baru)
+
+**Struktur field baru:**
+- `NameQuest` — internal quest ID (untuk StartQuest/TurnInQuest)
+- `QuestSlot` — nomor slot di NPC (1 atau 2)
+- `MonPos` — posisi spawn musuh (untuk TweenFly ke area farm)
+
+**Sea 1 — 26 entry (dari 16):**
+- ✅ **Tambah**: Bandit (Lv1, BanditQuest1 slot1)
+- ✅ **Tambah**: Chief Petty Officer (Lv120, MarineQuest2 slot1)
+- ✅ **Fix**: Prison quest — Warden/Chief Warden (enemy tidak ada) → Prisoner (Lv190) + Dangerous Prisoner (Lv210), keduanya PrisonerQuest
+- ✅ **Tambah**: Toga Warrior (Lv250, ColosseumQuest slot1)
+- ✅ **Tambah**: Gladiator (Lv275, ColosseumQuest slot2)
+- ✅ **Fix**: Magma Quest — dari Magma Ninja (salah level/enemy) → Military Soldier (Lv300) + Military Spy (Lv325), keduanya MagmaQuest
+- ✅ **Tambah**: Fishman Warrior (Lv375, FishmanQuest slot1)
+- ✅ **Tambah**: Fishman Commando (Lv400, FishmanQuest slot2)
+- ✅ **Fix**: SkyExp — God's Guard pakai SkyExp1Quest (bukan SkyExpQuest), Shanda slot2 NpcPos benar
+- ✅ **Tambah**: Royal Squad (Lv525, SkyExp2Quest slot1)
+- ✅ **Tambah**: Royal Soldier (Lv550, SkyExp2Quest slot2)
+- ✅ **Fix**: SkyQuest NpcPos akurat dari Gay Hub (bukan approx)
+
+**Sea 2 — 22 entry (dari 12):**
+- ✅ **Tambah**: Marine Lieutenant (Lv875, MarineQuest3 slot1)
+- ✅ **Tambah**: Marine Captain (Lv900, MarineQuest3 slot2)
+- ✅ **Fix**: IceSideQuest posisi benar — Lab Subordinate (Lv1100 slot1) + Horned Warrior (Lv1125 slot2)
+- ✅ **Fix**: Magma Ninja posisi/quest benar — FireSideQuest slot1 (Lv1175, bukan 1150)
+- ✅ **Tambah**: Lava Pirate (Lv1200, FireSideQuest slot2)
+- ✅ **Fix**: Ship Quest — ShipQuest1 (Deckhand/Engineer) + ShipQuest2 (Steward/Officer, sebelumnya missing)
+- ✅ **Tambah**: Ship Steward (Lv1300, ShipQuest2 slot1)
+- ✅ **Tambah**: Ship Officer (Lv1325, ShipQuest2 slot2)
+- ✅ **Fix**: ZombieQuest NpcPos akurat, ForgottenQuest NpcPos akurat
+
+**Sea 3 — 42 entry (dari 10):**
+- ✅ **Tambah**: Pistol Billionaire (Lv1525, PiratePortQuest slot2)
+- ✅ **Tambah**: Dragon Crew Warrior + Archer (Lv1575/1600, DragonCrewQuest)
+- ✅ **Tambah**: Hydra Enforcer + Venomous Assailant (Lv1625/1650, VenomCrewQuest)
+- ✅ **Fix**: DeepForestIsland3 → Fishman Raider/Captain (Lv1775/1800)
+- ✅ **Tambah**: Forest Pirate + Mythological Pirate (Lv1825/1850, DeepForestIsland)
+- ✅ **Tambah**: Demonic Soul + Possessed Mummy (Lv2025/2050, HauntedQuest2)
+- ✅ **Tambah**: Peanut Scout + President (Lv2075/2100, NutsIslandQuest)
+- ✅ **Tambah**: Ice Cream Chef + Commander (Lv2125/2150, IceCreamIslandQuest)
+- ✅ **Tambah**: Cookie Crafter + Cake Guard (Lv2200/2225, CakeQuest1)
+- ✅ **Tambah**: Baking Staff + Head Baker (Lv2250/2275, CakeQuest2)
+- ✅ **Tambah**: Cocoa Warrior + Chocolate Bar Battler (Lv2300/2325, ChocQuest1)
+- ✅ **Tambah**: Sweet Thief + Candy Rebel (Lv2350/2375, ChocQuest2)
+- ✅ **Fix**: Candy Quest — CandyQuest1 (bukan CandyQuest) + Snow Demon (Lv2425 slot2)
+- ✅ **Tambah**: Isle Outlaw + Island Boy (Lv2450/2475, TikiQuest1)
+- ✅ **Tambah**: Isle Champion (Lv2525, TikiQuest2)
+- ✅ **Tambah**: Serpent Hunter + Skull Slayer (Lv2550/2575, TikiQuest3)
+
+**Sea 4 (Submerged) — 5 entry baru:**
+- ✅ **Tambah**: Reef Bandit + Coral Pirate (Lv2600/2625, SubmergedQuest1)
+- ✅ **Tambah**: Sea Chanter (Lv2650, SubmergedQuest2)
+- ✅ **Tambah**: High Disciple + Grand Devotee (Lv2675/2700, SubmergedQuest3)
+
+#### UI Messages
+- Ganti `quest.NpcName` → `quest.Name` di 2 status message (FarmLv + QuestStatus)
+
+**Sumber data**: Gay Hub CheckQuest (sumber utama) + Hoho_Check_Quest.lua (validasi CFrame) + Eclipse Hub (cross-check)
+
+---
+
 ## [2026-05-27] v2.1.0 — Upgrade TweenFly + BringEnemy (Multi-Source)
 
 ### Games/BloxFruits.luau — Logika saja (UI tidak diubah)
