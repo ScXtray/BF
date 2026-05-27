@@ -5,6 +5,41 @@ Format: `[Tanggal] versi — deskripsi`
 
 ---
 
+## [2026-05-27] v2.1.0 — Upgrade TweenFly + BringEnemy (Multi-Source)
+
+### Games/BloxFruits.luau — Logika saja (UI tidak diubah)
+
+#### TweenFlyTo — Ganti Engine (redzplock technique)
+- **Hapus** ketergantungan `TweenModule` dari URL eksternal (newredzv3) — tidak lagi bisa gagal karena URL down
+- **Ganti** dengan native `TweenService:Create(hrp, ...)` langsung pada HumanoidRootPart
+- **Tambah** `CurrentFlyTween` tracker — bisa di-cancel kapanpun via `StopFlyTween()`
+- **Blocking** kini pakai `PlaybackState == Playing` — lebih akurat dari polling `IsTweening()` tiap 0.05s
+- Rumus waktu: `dist / speed` (proporsional jarak) — semakin jauh semakin lama, bukan fixed
+
+#### BringEnemiesToPlayer — Upgrade Total (6 perbaikan)
+- **Tambah IsRaidMob()** — filter 4 kondisi (LongHiHi, paling lengkap):
+  - Cek nama mob: "raid", "microchip", "island"
+  - Cek attribute: `IsRaid`, `RaidMob`, `IsBoss`
+  - Cek `WalkSpeed == 0` (mob beku/boss)
+  - Cek parent `_worldorigin` (eksklusif LongHiHi)
+- **Tambah PosMon system** — mob yang sedang ditarget dikunci CFrame-nya, bring selalu ke titik yang sama bukan ikut player bergerak
+- **Ganti teleport → TweenService 0.45s smooth** (LongHiHi / Thauan Hub) — mob tidak "lompat" tiba-tiba
+- **Tambah MaxBringMobs = 3** — maksimal 3 mob dibring sekaligus, anti-lag
+- **Tambah Tweening attribute** — anti double-bring, mob yang sedang di-tween tidak ditween lagi
+- **Tambah Animator:Destroy + WalkSpeed=0 + JumpPower=0** (Gay Hub) — mob tidak bisa kabur setelah tiba
+- **Perbesar hitbox (60x60x60)** setelah tween selesai, bukan sebelumnya
+
+#### Farm Loop (AutoFarm / AutoQuest / AutoFarmLevel)
+- **Tambah** `PosMon = hrp.CFrame` saat mob target ditemukan — sistem bring selalu tahu posisi mob dikunci
+- **Tambah** `PosMon = nil` saat tidak ada musuh — bring kembali ke posisi player
+
+#### Cleanup
+- Hapus `TweenModule` safeLoad dari URL eksternal
+- Hapus fallback block `TweenModule` (tidak diperlukan lagi)
+- Update semua komentar yang masih menyebut TweenModule → TweenService
+
+---
+
 ## [2026-05-27] v2.0.0 — Panda-Hub Logic + Cleanup
 
 ### main.luau
