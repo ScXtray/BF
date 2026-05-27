@@ -24,8 +24,8 @@ local fetcher, urls = {}, {}
 
 local _ENV = (getgenv or getrenv or getfenv)()
 
-urls.Owner = "https://raw.githubusercontent.com/XtrayScript/";
-urls.Repository = urls.Owner .. "XtrayScript/refs/heads/main/";
+urls.Owner = "https://raw.githubusercontent.com/ScXtray/";
+urls.Repository = urls.Owner .. "BF/refs/heads/main/";
 urls.Translator = urls.Repository .. "Translator/";
 urls.Utils = urls.Repository .. "Utils/";
 
