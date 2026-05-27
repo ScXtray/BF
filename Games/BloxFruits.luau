@@ -1,6 +1,6 @@
 -- ============================================================
 --   XTRAY SCRIPT - Blox Fruits
---   github.com/XtrayScript/XtrayScript
+--   github.com/ScXtray/BF
 -- ============================================================
 
 local fetcher, Settings = ...
@@ -539,12 +539,18 @@ local function AttackWithWeapon()
 end
 
 -- Tarik semua musuh dalam radius ke posisi player
+-- (teknik dari Panda-Hub: size 60 + PlatformStand + Sit + CanCollide false + SimulationRadius)
 local FreezeBringConns = {}
 local function BringEnemiesToPlayer()
     local root = GetRootPart()
     if not root then return end
     local EFolder = workspace:FindFirstChild("Enemies")
     if not EFolder then return end
+
+    -- Perluas SimulationRadius agar kita punya network ownership musuh
+    pcall(sethiddenproperty, LocalPlayer, "SimulationRadius", math.huge)
+
+    local targetCF = root.CFrame
     for _, enemy in ipairs(EFolder:GetChildren()) do
         local hrp = enemy:FindFirstChild("HumanoidRootPart")
         local hum = enemy:FindFirstChildOfClass("Humanoid")
@@ -552,9 +558,15 @@ local function BringEnemiesToPlayer()
             local dist = (hrp.Position - root.Position).Magnitude
             if dist <= State.BringRadius then
                 pcall(function()
-                    hrp.CFrame = CFrame.new(root.Position + Vector3.new(
-                        math.random(-4, 4), 2, math.random(-4, 4)
-                    ))
+                    -- Perbesar hitbox agar mudah kena serangan
+                    hrp.Size        = Vector3.new(60, 60, 60)
+                    hrp.CFrame      = targetCF * CFrame.new(
+                        math.random(-3, 3), 0, math.random(-3, 3)
+                    )
+                    hrp.CanCollide  = false
+                    -- Paksa musuh tidak bergerak/menolak
+                    hum.PlatformStand = true
+                    hum.Sit           = true
                 end)
             end
         end
@@ -743,10 +755,13 @@ local function KillAuraOnce(range)
             local dist = (hrp.Position - root.Position).Magnitude
             if dist <= (range or 60) then
                 pcall(function()
-                    hrp.Size    = Vector3.new(60, 60, 60)
-                    hrp.CanCollide = false
+                    hrp.Size          = Vector3.new(60, 60, 60)
+                    hrp.CFrame        = root.CFrame
+                    hrp.CanCollide    = false
+                    hum.PlatformStand = true
+                    hum.Sit           = true
                     hum:ChangeState(15)
-                    hum.Health = 0
+                    hum.Health        = 0
                 end)
             end
         end
@@ -771,33 +786,45 @@ local function TryEnableBuso()
 end
 
 local function TryAcceptQuest(quest)
-    -- coba InvokeServer dengan nama NPC
-    if CommF then
-        pcall(function()
-            CommF:InvokeServer("TakeQuest", quest.NpcName)
-        end)
-        task.wait(0.5)
-    end
+    if not CommF then return end
+    pcall(function()
+        -- Set spawn point di lokasi NPC sebelum accept (teknik Panda-Hub)
+        CommF:InvokeServer("SetSpawnPoint")
+        task.wait(0.3)
+        -- Coba accept quest dengan nama NPC dan slot (1 atau 2)
+        -- StartQuest adalah remote yang benar di BloxFruits
+        local slot = quest.QuestSlot or 1
+        CommF:InvokeServer("StartQuest", quest.NpcName, slot)
+    end)
+    task.wait(0.5)
 end
 
 local function TryCompleteQuest(quest)
-    if CommF then
-        pcall(function()
-            CommF:InvokeServer("TurnInQuest", quest.NpcName)
-        end)
-        task.wait(0.5)
-    end
+    if not CommF then return end
+    pcall(function()
+        -- TurnInQuest / EndQuest tergantung versi BF
+        CommF:InvokeServer("TurnInQuest", quest.NpcName)
+    end)
+    task.wait(0.5)
 end
 
 local function IsQuestActive()
-    -- cek apakah pemain sedang punya quest aktif
+    -- Cek via PlayerGui.Main.Quest.Visible (cara akurat ala Panda-Hub)
+    local ok, result = pcall(function()
+        local gui = LocalPlayer:WaitForChild("PlayerGui", 1)
+        if not gui then return false end
+        local main = gui:FindFirstChild("Main") or gui:FindFirstChild("Main (minimal)")
+        if not main then return false end
+        local questFrame = main:FindFirstChild("Quest")
+        return questFrame and questFrame.Visible
+    end)
+    if ok and result then return true end
+
+    -- Fallback: cek via Data
     local Data = LocalPlayer:FindFirstChild("Data")
     if Data then
         local Quest = Data:FindFirstChild("Quest")
-        if Quest and Quest.Value ~= "" then
-            return true
-        end
-        -- alternatif cek via QuestProgress
+        if Quest and Quest.Value ~= "" then return true end
         local QuestProgress = Data:FindFirstChild("QuestProgress")
         if QuestProgress then return true end
     end
@@ -805,12 +832,22 @@ local function IsQuestActive()
 end
 
 local function IsQuestComplete()
+    -- Quest selesai = frame Quest tidak visible
+    local ok, result = pcall(function()
+        local gui  = LocalPlayer:FindFirstChild("PlayerGui")
+        if not gui then return true end
+        local main = gui:FindFirstChild("Main") or gui:FindFirstChild("Main (minimal)")
+        if not main then return true end
+        local questFrame = main:FindFirstChild("Quest")
+        return questFrame and not questFrame.Visible
+    end)
+    if ok and result then return true end
+
+    -- Fallback via Data
     local Data = LocalPlayer:FindFirstChild("Data")
     if not Data then return false end
-    -- Quest dianggap selesai jika Quest.Value kosong (server clear setelah turn in)
     local Quest = Data:FindFirstChild("Quest")
     if Quest and Quest.Value == "" then return true end
-    -- Fallback: tidak ada QuestProgress berarti selesai
     local QP = Data:FindFirstChild("QuestProgress")
     return QP == nil
 end
@@ -937,6 +974,9 @@ FarmTab:AddToggle({
                 while State.AutoFarm do
                     local root = GetRootPart()
 
+                    -- Boost SimulationRadius agar kita punya network ownership
+                    pcall(sethiddenproperty, LocalPlayer, "SimulationRadius", math.huge)
+
                     -- Bring otomatis selalu aktif saat Auto Farm ON
                     BringEnemiesToPlayer()
 
@@ -947,10 +987,12 @@ FarmTab:AddToggle({
                             local hrp = enemy:FindFirstChild("HumanoidRootPart")
                             local hum = enemy:FindFirstChildOfClass("Humanoid")
                             if hrp and hum and hum.Health > 0 then
-                                root.CFrame = CFrame.new(
-                                    hrp.Position + (root.Position - hrp.Position).Unit * 5
-                                )
-                                task.wait(0.05)
+                                -- Tween smooth ke musuh (tidak teleport abrupt)
+                                local dist = (hrp.Position - root.Position).Magnitude
+                                if dist > 8 then
+                                    pcall(TweenFlyTo, hrp.Position)
+                                    task.wait(0.05)
+                                end
                                 AttackWithWeapon()
                             end
                         end
@@ -966,7 +1008,7 @@ FarmTab:AddToggle({
                                 if hrp and myRoot then
                                     local d = (hrp.Position - myRoot.Position).Magnitude
                                     if d < nearDist and d < State.FarmRange then
-                                        nearest = plr.Character
+                                        nearest  = plr.Character
                                         nearDist = d
                                     end
                                 end
@@ -975,16 +1017,17 @@ FarmTab:AddToggle({
                         if nearest and root then
                             local hrp = nearest:FindFirstChild("HumanoidRootPart")
                             if hrp then
-                                root.CFrame = CFrame.new(
-                                    hrp.Position + (root.Position - hrp.Position).Unit * 5
-                                )
-                                task.wait(0.05)
+                                local dist = (hrp.Position - root.Position).Magnitude
+                                if dist > 8 then
+                                    pcall(TweenFlyTo, hrp.Position)
+                                    task.wait(0.05)
+                                end
                                 AttackWithWeapon()
                             end
                         end
                     end
 
-                    task.wait(0.1)
+                    task.wait(0.07)
                 end
             end)
         end
@@ -3487,6 +3530,6 @@ ExtrasTab:AddButton({
 
 Notify({
     Title    = "Xtray Script",
-    Text     = "Script v1.5.0 berhasil dimuat! Farm, Boss, Fishing, Mastery, Sea Event, Extras ready!",
+    Text     = "Script v2.0.0 berhasil dimuat! Farm + Panda-Hub logic, Boss, Fishing, Mastery, Sea Event ready!",
     Duration = 5
 })
