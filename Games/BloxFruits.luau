@@ -1367,7 +1367,7 @@ DiscordTab:AddSection("Informasi Script")
 
 DiscordTab:AddParagraph({
     "Xtray Script - Blox Fruits",
-    "Versi 1.3.1 | Script gratis tanpa key"
+    "Versi 2.2.0 | Script gratis tanpa key"
 })
 
 DiscordTab:AddParagraph({
@@ -3277,7 +3277,7 @@ MiscTab:AddSection("Info")
 
 MiscTab:AddParagraph({
     "Xtray Script",
-    "Version 1.5.0 | github.com/XtrayScript"
+    "Version 2.2.0 | github.com/ScXtray"
 })
 
 MiscTab:AddParagraph({
