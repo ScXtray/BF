@@ -3277,7 +3277,7 @@ MiscTab:AddSection("Info")
 
 MiscTab:AddParagraph({
     "Xtray Script",
-    "Version 2.2.0 | github.com/ScXtray"
+    "Versi 2.2.0 | github.com/ScXtray/BF"
 })
 
 MiscTab:AddParagraph({
